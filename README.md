@@ -29,6 +29,7 @@ For major project goals, see the [roadmap](ROADMAP.md)
 1. Clone the git repository.
 1. Build on the host:
    ```
+   go mod tidy
    make etcdadm
    ```
 1. Build in a container, using docker:

@@ -23,6 +23,9 @@ PACKAGE_GOPATH := /go/src/sigs.k8s.io/$(BIN)
 LDFLAGS := $(shell source ./version.sh ; KUBE_ROOT=. ; KUBE_GIT_VERSION=${VERSION_OVERRIDE} ; kube::version::ldflags)
 GIT_STORAGE_MOUNT := $(shell source ./git_utils.sh; container_git_storage_mount)
 GO_IMAGE ?= golang:1.16
+MAC_FOR_LINUX_FLAG := CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+OUTPUT := output
+
 
 .PHONY: clean container-build default ensure diagrams $(BIN)
 
@@ -32,10 +35,13 @@ container-build:
 	docker run --rm -e VERSION_OVERRIDE=${VERSION_OVERRIDE}  -e GOPROXY -v $(PWD):$(PACKAGE_GOPATH) -w $(PACKAGE_GOPATH) $(GIT_STORAGE_MOUNT) ${GO_IMAGE} /bin/bash -c "make"
 
 $(BIN):
-	GO111MODULE=on go build -ldflags "$(LDFLAGS)"
+	GO111MODULE=on go build -ldflags "$(LDFLAGS)" -o $(OUTPUT)/$(BIN)
+
+macforlinux:
+	GO111MODULE=on  $(MAC_FOR_LINUX_FLAG) go build -ldflags "$(LDFLAGS)" -o $(OUTPUT)/$(BIN)-linux
 
 clean:
-	rm -f $(BIN) plantuml.jar
+	rm -f $(BIN) plantuml.jar ; rm -f $(OUTPUT)/*
 
 diagrams: plantuml.jar
 	java -jar plantuml.jar docs/diagrams/*.md
